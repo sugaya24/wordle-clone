@@ -2,19 +2,46 @@ import { Box } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const ANSWER = 'hello';
 
 const Wordle = () => {
-  const [word, setWord] = useState<string>('');
+  type TWordRowsState = {
+    state: string;
+    wordState: {
+      state: string;
+      letter: string;
+    }[];
+  }[];
+  const initialWordRowsState: TWordRowsState = [];
+  for (let i = 0; i < 6; i++) {
+    initialWordRowsState.push({
+      state: '',
+      wordState: [],
+    });
+    for (let j = 0; j < 5; j++) {
+      initialWordRowsState[i].wordState.push({
+        state: '',
+        letter: '',
+      });
+    }
+  }
+
+  const [wordRowsState, setWordRowsState] =
+    useState<TWordRowsState>(initialWordRowsState);
+  const [currentWord, setCurrentWord] = useState<string>('');
+  const [letterCount, setLetterCount] = useState<number>(0);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Backspace') {
-        setWord((prev) => prev.slice(0, -1));
+        deleteLetter();
       } else if (CHARS_LOWER.indexOf(e.key) >= 0) {
         addLetter(e.key);
+      } else if (e.key === 'Enter' && letterCount === 5) {
+        checkCurrentWord();
       }
     },
-    [word]
+    [wordRowsState, letterCount]
   );
 
   useEffect(() => {
@@ -22,36 +49,80 @@ const Wordle = () => {
     if (!unmounted) {
       document.addEventListener('keydown', handleKeyDown);
     }
+    setCurrentWord(
+      wordRowsState[0].wordState.map((wordState) => wordState.letter).join('')
+    );
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       unmounted = true;
     };
-  }, [word, handleKeyDown]);
+  }, [wordRowsState, handleKeyDown]);
 
-  const addLetter = (str: string): void => {
-    if (word.length < 5) {
-      setWord((prev) => prev + str);
+  const addLetter = (letter: string): void => {
+    if (letterCount < 5) {
+      setWordRowsState((prev: TWordRowsState) => {
+        const copyForUpdate = [...prev];
+        copyForUpdate[0].wordState[letterCount] = {
+          state: 'input',
+          letter,
+        };
+        return copyForUpdate;
+      });
+      setLetterCount((prev) => prev + 1);
+    }
+  };
+
+  const deleteLetter = (): void => {
+    if (letterCount > 0) {
+      setWordRowsState((prev: TWordRowsState) => {
+        const copyForUpdate = [...prev];
+        copyForUpdate[0].wordState[letterCount - 1] = {
+          state: '',
+          letter: '',
+        };
+        return copyForUpdate;
+      });
+      setLetterCount((prev) => prev - 1);
+    }
+  };
+
+  const checkCurrentWord = (): void => {
+    if (currentWord === ANSWER) {
+      console.log('correct!');
+    }
+    for (let i = 0; i < 5; i++) {
+      setWordRowsState((prev: TWordRowsState) => {
+        const copyForUpdate = [...prev];
+        copyForUpdate[0].wordState[letterCount - i - 1] = {
+          state: 'input',
+          letter: '',
+        };
+        return copyForUpdate;
+      });
+      setLetterCount((prev) => prev - 1);
     }
   };
 
   return (
-    <Box display={'flex'}>
-      <Box data-testid="input">{word}</Box>
-      <Box data-testid="letter0" border={'1px'} p={2}>
-        {word[0]}
+    <Box>
+      <Box data-testid="input" display={'none'}>
+        {currentWord}
       </Box>
-      <Box data-testid="letter1" border={'1px'} p={2}>
-        {word[1]}
-      </Box>
-      <Box data-testid="letter2" border={'1px'} p={2}>
-        {word[2]}
-      </Box>
-      <Box data-testid="letter3" border={'1px'} p={2}>
-        {word[3]}
-      </Box>
-      <Box data-testid="letter4" border={'1px'} p={2}>
-        {word[4]}
-      </Box>
+      {wordRowsState.map((row, i) => {
+        return (
+          <Box key={i} display={'flex'}>
+            {row.wordState.map((state, i) => {
+              return (
+                <Box key={i} border={'1px'} display={'flex'}>
+                  <Box w={'30px'} h={'30px'}>
+                    {state.letter.toUpperCase()}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        );
+      })}
     </Box>
   );
 };
