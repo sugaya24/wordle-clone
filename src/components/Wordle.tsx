@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, Center } from '@chakra-ui/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
@@ -30,6 +30,8 @@ const Wordle = () => {
     useState<TWordRowsState>(initialWordRowsState);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [letterCount, setLetterCount] = useState<number>(0);
+  const [rowCount, setRowCount] = useState<number>(0);
+  const [isComplete, setIsComplete] = useState<boolean>(false);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -41,7 +43,7 @@ const Wordle = () => {
         checkCurrentWord();
       }
     },
-    [wordRowsState, letterCount]
+    [wordRowsState, letterCount, rowCount]
   );
 
   useEffect(() => {
@@ -50,7 +52,9 @@ const Wordle = () => {
       document.addEventListener('keydown', handleKeyDown);
     }
     setCurrentWord(
-      wordRowsState[0].wordState.map((wordState) => wordState.letter).join('')
+      wordRowsState[rowCount].wordState
+        .map((wordState) => wordState.letter)
+        .join('')
     );
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -59,10 +63,11 @@ const Wordle = () => {
   }, [wordRowsState, handleKeyDown]);
 
   const addLetter = (letter: string): void => {
+    if (isComplete) return;
     if (letterCount < 5) {
       setWordRowsState((prev: TWordRowsState) => {
         const copyForUpdate = [...prev];
-        copyForUpdate[0].wordState[letterCount] = {
+        copyForUpdate[rowCount].wordState[letterCount] = {
           state: 'input',
           letter,
         };
@@ -73,10 +78,11 @@ const Wordle = () => {
   };
 
   const deleteLetter = (): void => {
+    if (isComplete) return;
     if (letterCount > 0) {
       setWordRowsState((prev: TWordRowsState) => {
         const copyForUpdate = [...prev];
-        copyForUpdate[0].wordState[letterCount - 1] = {
+        copyForUpdate[rowCount].wordState[letterCount - 1] = {
           state: '',
           letter: '',
         };
@@ -87,37 +93,33 @@ const Wordle = () => {
   };
 
   const checkCurrentWord = (): void => {
+    console.log(`Checking ${currentWord} at row ${rowCount}`);
     if (currentWord === ANSWER) {
-      console.log('correct!');
+      console.log('correct! at challenge ' + rowCount);
+      setIsComplete(true);
     }
-    for (let i = 0; i < 5; i++) {
-      setWordRowsState((prev: TWordRowsState) => {
-        const copyForUpdate = [...prev];
-        copyForUpdate[0].wordState[letterCount - i - 1] = {
-          state: 'input',
-          letter: '',
-        };
-        return copyForUpdate;
-      });
-      setLetterCount((prev) => prev - 1);
+    setLetterCount(0);
+    if (rowCount < 5) {
+      setRowCount((prev) => prev + 1);
+    } else {
+      setIsComplete(true);
     }
   };
 
   return (
     <Box>
-      <Box data-testid="input" display={'none'}>
+      <Box data-testid="input" display={'block'}>
         {currentWord}
       </Box>
+      <Box data-testid="word-count">{rowCount}</Box>
       {wordRowsState.map((row, i) => {
         return (
           <Box key={i} display={'flex'}>
             {row.wordState.map((state, i) => {
               return (
-                <Box key={i} border={'1px'} display={'flex'}>
-                  <Box w={'30px'} h={'30px'}>
-                    {state.letter.toUpperCase()}
-                  </Box>
-                </Box>
+                <Center key={i} border={'1px'} w={'30px'} h={'30px'}>
+                  {state.letter.toUpperCase()}
+                </Center>
               );
             })}
           </Box>

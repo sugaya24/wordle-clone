@@ -5,9 +5,11 @@ afterEach(cleanup);
 
 describe('タイプした文字が正しく表示される', () => {
   let inputWord: HTMLElement;
+  let rowCount: HTMLElement;
   beforeEach(() => {
     const { getByTestId } = render(<Wordle />);
     inputWord = getByTestId('input');
+    rowCount = getByTestId('word-count');
   });
 
   it('キーボードから a が入力されたら、"a"が表示される', () => {
@@ -47,6 +49,14 @@ describe('タイプした文字が正しく表示される', () => {
       fireEvent.keyDown(document.body, { key: 'Enter' });
       expect(inputWord.textContent).toBe('abc');
     });
+  });
+  it('一回めの単語のチェックが終わったら、次の列へ移動', () => {
+    expect(rowCount.textContent).toBe('0');
+    'abcde'.split('').forEach((letter) => {
+      fireEvent.keyDown(document.body, { key: letter });
+    });
+    fireEvent.keyDown(document.body, { key: 'Enter' });
+    expect(rowCount.textContent).toBe('1');
   });
 });
 
