@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, useToast } from '@chakra-ui/react';
 import Row from './Row';
 import { ANSWER, CHARS_LOWER } from '../constants/word';
 
@@ -31,6 +31,7 @@ const Wordle = () => {
   const [letterCount, setLetterCount] = useState<number>(0);
   const [rowCount, setRowCount] = useState<number>(0);
   const [isComplete, setIsComplete] = useState<boolean>(false);
+  const toast = useToast();
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -60,6 +61,18 @@ const Wordle = () => {
       unmounted = true;
     };
   }, [wordRowsState, handleKeyDown]);
+
+  useEffect(() => {
+    if (isComplete) {
+      toast({
+        title: 'Congratulations!',
+        description: `You've completed the wordle!`,
+        status: 'success',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  }, [isComplete]);
 
   const addLetter = (letter: string): void => {
     if (isComplete) return;
@@ -127,13 +140,13 @@ const Wordle = () => {
         console.log('correct! at challenge ' + rowCount);
         setIsComplete(true);
       }
+      setLetterCount(0);
+      if (rowCount < 5) {
+        setRowCount((prev) => prev + 1);
+      } else {
+        setIsComplete(true);
+      }
     });
-    setLetterCount(0);
-    if (rowCount < 5) {
-      setRowCount((prev) => prev + 1);
-    } else {
-      setIsComplete(true);
-    }
   };
 
   return (
