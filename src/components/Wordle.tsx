@@ -1,15 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Center } from '@chakra-ui/react';
-import classNames from 'classnames';
-import {
-  inputStyle,
-  correctStyle,
-  absentStyle,
-  presentStyle,
-} from './WordleStyle';
-
-const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
-const ANSWER = 'hello';
+import { Box } from '@chakra-ui/react';
+import Row from './Row';
+import { ANSWER, CHARS_LOWER } from '../constants/word';
 
 const Wordle = () => {
   type TWordRowsState = {
@@ -152,45 +144,7 @@ const Wordle = () => {
       color={'whiteAlpha.800'}
     >
       {wordRowsState.map((row, i) => {
-        return (
-          <Box
-            key={i}
-            w={'340px'}
-            mx={'auto'}
-            display={'grid'}
-            gap={'10px'}
-            gridTemplateColumns={'repeat(5, 1fr)'}
-            mb={'10px'}
-          >
-            {row.wordState.map((state, j) => {
-              return (
-                <Center
-                  key={j}
-                  border={'2px'}
-                  borderColor={'gray.700'}
-                  className={classNames([
-                    state.state === 'input' && 'input',
-                    state.state === 'correct' && 'correct',
-                    state.state === 'absent' && 'absent',
-                    state.state === 'present' && 'present',
-                  ])}
-                  h={'60px'}
-                  rounded={'sm'}
-                  fontSize={'3xl'}
-                  css={[
-                    state.state === 'input' && inputStyle,
-                    state.state === 'correct' && correctStyle,
-                    state.state === 'absent' && absentStyle,
-                    state.state === 'present' && presentStyle,
-                  ]}
-                  data-testid={`letter-${i}-${j}`}
-                >
-                  {state.letter.toUpperCase()}
-                </Center>
-              );
-            })}
-          </Box>
-        );
+        return <Row key={i} row={row} i={i} />;
       })}
       <Box data-testid="input" display={'block'}>
         {currentWord}
