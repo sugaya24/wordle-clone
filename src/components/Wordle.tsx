@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, useToast } from '@chakra-ui/react';
+import { Box, Center, useToast } from '@chakra-ui/react';
 import Row from './Row';
 import { ANSWER, CHARS_LOWER } from '../constants/word';
+import Keyboard from './Keyboard';
 
 const Wordle = () => {
   type TWordRowsState = {
@@ -39,7 +40,7 @@ const Wordle = () => {
         deleteLetter();
       } else if (CHARS_LOWER.indexOf(e.key) >= 0) {
         addLetter(e.key);
-      } else if (e.key === 'Enter' && letterCount === 5) {
+      } else if (e.key === 'Enter') {
         checkCurrentWord();
       }
     },
@@ -105,6 +106,7 @@ const Wordle = () => {
   };
 
   const checkCurrentWord = (): void => {
+    if (letterCount !== 5) return;
     console.log(`Checking ${currentWord} at row ${rowCount}`);
     const promiseList: Promise<void>[] = [];
     for (let i = 0; i < 5; i++) {
@@ -157,13 +159,24 @@ const Wordle = () => {
       bgColor={'blackAlpha.900'}
       color={'whiteAlpha.800'}
     >
-      {wordRowsState.map((row, i) => {
-        return <Row key={i} row={row} i={i} />;
-      })}
-      <Box data-testid="input" display={'block'}>
+      <Box pb={'8'}>
+        {wordRowsState.map((row, i) => {
+          return <Row key={i} row={row} i={i} />;
+        })}
+      </Box>
+      <Box data-testid="input" display={'none'}>
         {currentWord}
       </Box>
-      <Box data-testid="word-count">{rowCount}</Box>
+      <Box data-testid="word-count" display={'none'}>
+        {rowCount}
+      </Box>
+      <Center>
+        <Keyboard
+          addLetter={addLetter}
+          deleteLetter={deleteLetter}
+          checkCurrentWord={checkCurrentWord}
+        />
+      </Center>
     </Box>
   );
 };
