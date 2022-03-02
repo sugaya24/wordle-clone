@@ -153,6 +153,7 @@ const Wordle = () => {
     <Box
       h={'100vh'}
       w={'100%'}
+      pt={'8'}
       bgColor={'blackAlpha.900'}
       color={'whiteAlpha.800'}
     >
