@@ -40,6 +40,7 @@ const Wordle = () => {
   const [letterCount, setLetterCount] = useState<number>(0);
   const [rowCount, setRowCount] = useState<number>(0);
   const [isComplete, setIsComplete] = useState<boolean>(false);
+  const [isWon, setIsWon] = useState<boolean>(false);
   const toast = useToast();
   const [charStatus, setCharStatus] =
     useState<Map<string, CharStatus>>(initialCharStatus);
@@ -74,11 +75,22 @@ const Wordle = () => {
   }, [wordRowsState, handleKeyDown]);
 
   useEffect(() => {
-    if (isComplete) {
+    if (!isComplete) {
+      return;
+    }
+    if (isWon) {
       toast({
         title: 'Congratulations!',
         description: `You've completed the wordle!`,
         status: 'success',
+        duration: 9000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Oops!',
+        description: `The answer was "${ANSWER}".`,
+        status: 'error',
         duration: 9000,
         isClosable: true,
       });
@@ -167,6 +179,7 @@ const Wordle = () => {
         });
       });
       if (currentWord === ANSWER) {
+        setIsWon(true);
         setIsComplete(true);
       }
       setLetterCount(0);
