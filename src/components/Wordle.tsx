@@ -12,7 +12,12 @@ const Wordle = () => {
       letter: string;
     }[];
   }[];
+  type CharStatus = 'correct' | 'absent' | 'present' | 'empty';
   const initialWordRowsState: TWordRowsState = [];
+  const initialCharStatus: Map<string, CharStatus> = new Map<
+    string,
+    CharStatus
+  >();
   for (let i = 0; i < 6; i++) {
     initialWordRowsState.push({
       state: 'empty',
@@ -25,6 +30,9 @@ const Wordle = () => {
       });
     }
   }
+  CHARS_LOWER.split('').forEach((letter) => {
+    initialCharStatus.set(letter, 'empty');
+  });
 
   const [wordRowsState, setWordRowsState] =
     useState<TWordRowsState>(initialWordRowsState);
@@ -33,6 +41,8 @@ const Wordle = () => {
   const [rowCount, setRowCount] = useState<number>(0);
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const toast = useToast();
+  const [charStatus, setCharStatus] =
+    useState<Map<string, CharStatus>>(initialCharStatus);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -107,7 +117,6 @@ const Wordle = () => {
 
   const checkCurrentWord = (): void => {
     if (letterCount !== 5) return;
-    console.log(`Checking ${currentWord} at row ${rowCount}`);
     const promiseList: Promise<void>[] = [];
     for (let i = 0; i < 5; i++) {
       const promise: Promise<void> = new Promise((resolve) => {
@@ -137,9 +146,27 @@ const Wordle = () => {
       promiseList.push(promise);
     }
     Promise.all(promiseList).then(() => {
-      console.log('word check done');
+      wordRowsState[rowCount].wordState.map((wordState) => {
+        const { state, letter } = wordState;
+        setCharStatus((prev) => {
+          const copyForUpdate = new Map(prev);
+          if (state === 'correct') {
+            copyForUpdate.set(letter, 'correct');
+          }
+          if (state === 'present' && copyForUpdate.get(letter) !== 'correct') {
+            copyForUpdate.set(letter, 'present');
+          }
+          if (
+            state === 'absent' &&
+            copyForUpdate.get(letter) !== 'correct' &&
+            copyForUpdate.get(letter) !== 'present'
+          ) {
+            copyForUpdate.set(letter, 'absent');
+          }
+          return copyForUpdate;
+        });
+      });
       if (currentWord === ANSWER) {
-        console.log('correct! at challenge ' + rowCount);
         setIsComplete(true);
       }
       setLetterCount(0);
@@ -153,7 +180,7 @@ const Wordle = () => {
 
   return (
     <Box
-      h={'100vh'}
+      h={'calc(100vh - 50px)'}
       w={'100%'}
       pt={'8'}
       bgColor={'blackAlpha.900'}
@@ -164,19 +191,22 @@ const Wordle = () => {
           return <Row key={i} row={row} i={i} />;
         })}
       </Box>
+      <Center>
+        <Keyboard
+          addLetter={addLetter}
+          deleteLetter={deleteLetter}
+          checkCurrentWord={checkCurrentWord}
+          charStatus={charStatus}
+        />
+      </Center>
+      {/*--------- for test--------- */}
       <Box data-testid="input" display={'none'}>
         {currentWord}
       </Box>
       <Box data-testid="word-count" display={'none'}>
         {rowCount}
       </Box>
-      <Center>
-        <Keyboard
-          addLetter={addLetter}
-          deleteLetter={deleteLetter}
-          checkCurrentWord={checkCurrentWord}
-        />
-      </Center>
+      {/*--------- for test--------- */}
     </Box>
   );
 };
