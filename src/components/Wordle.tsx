@@ -108,7 +108,7 @@ const Wordle = () => {
         };
         return copyForUpdate;
       });
-      setLetterCount((prev) => prev + 1);
+      setLetterCount((prev) => (prev < 5 ? prev + 1 : prev));
     }
   };
 
