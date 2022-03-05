@@ -1,2 +1,3 @@
 # Wordle Clone
-![wordle-clone](https://gyazo.com/d665dfbdb2ad5389252aa3f7633ba0b7)
+
+![wordle-clone](https://user-images.githubusercontent.com/13996983/156882330-6bc594cb-f956-4eee-8bc6-5221a8dc0482.gif)
