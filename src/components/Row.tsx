@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import Cell from './Cell';
+import { jiggleStyle } from './WordleStyle';
 
 type Props = {
   i: number;
@@ -12,9 +13,10 @@ type Props = {
     }[];
   };
   rowCount: number;
+  jiggle: string;
 };
 
-const Row = ({ i, row, currentWord, rowCount }: Props) => {
+const Row = ({ i, row, currentWord, rowCount, jiggle }: Props) => {
   const [splitCurrentWord, setSplitCurrentWord] = useState<string[]>(
     currentWord.split('')
   );
@@ -31,6 +33,7 @@ const Row = ({ i, row, currentWord, rowCount }: Props) => {
       gap={'10px'}
       gridTemplateColumns={'repeat(5, 1fr)'}
       mb={'10px'}
+      css={rowCount === i && jiggle === 'jiggle' && jiggleStyle}
     >
       {row.wordState.map((state, j) => {
         return (

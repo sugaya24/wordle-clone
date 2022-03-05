@@ -3,6 +3,7 @@ import { Box, Center, useToast } from '@chakra-ui/react';
 import Row from './Row';
 import { ANSWER, CHARS_LOWER } from '../constants/word';
 import Keyboard from './Keyboard';
+import { wordList } from '../constants/wordList';
 
 const Wordle = () => {
   type TWordRowsState = {
@@ -43,6 +44,7 @@ const Wordle = () => {
   const toast = useToast();
   const [charStatus, setCharStatus] =
     useState<Map<string, CharStatus>>(initialCharStatus);
+  const [jiggle, setJiggle] = useState<string>('');
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -105,8 +107,30 @@ const Wordle = () => {
     }
   };
 
+  const handleJiggle = (): Promise<void> => {
+    return new Promise((resolve) => {
+      setJiggle('jiggle');
+      resolve();
+    });
+  };
+
   const checkCurrentWord = (): void => {
     if (currentWord.length !== 5) return;
+    if (!wordList.includes(currentWord)) {
+      handleJiggle().then(() => {
+        toast({
+          description: `"${currentWord}" is not in the list.`,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+          position: 'top',
+        });
+        setTimeout(() => {
+          setJiggle('');
+        }, 1000);
+      });
+      return;
+    }
     const promiseList: Promise<void>[] = [];
     for (let i = 0; i < 5; i++) {
       const promise: Promise<void> = new Promise((resolve) => {
@@ -223,6 +247,7 @@ const Wordle = () => {
               i={i}
               currentWord={currentWord}
               rowCount={rowCount}
+              jiggle={jiggle}
             />
           );
         })}

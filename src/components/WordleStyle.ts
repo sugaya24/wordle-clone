@@ -69,3 +69,24 @@ export const absentStyle = css`
   }
   animation: absentLetter 0.5s ease-out;
 `;
+
+export const jiggleStyle = css`
+  animation: jiggle 0.3s linear;
+  @keyframes jiggle {
+    0% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(-0.5rem, 0);
+    }
+    50% {
+      transform: translate(0.5rem, 0);
+    }
+    75% {
+      transform: translate(-0.5rem, 0);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+}`;
