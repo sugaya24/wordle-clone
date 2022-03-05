@@ -84,6 +84,11 @@ const Wordle = () => {
     if (isComplete) return;
     if (currentWord.length < 5) {
       setCurrentWord(currentWord + letter);
+      setWordRowsState((wordRowsState) => {
+        const copyForUpdate = [...wordRowsState];
+        copyForUpdate[rowCount].wordState[currentWord.length].state = 'input';
+        return copyForUpdate;
+      });
     }
   };
 
@@ -91,6 +96,12 @@ const Wordle = () => {
     if (isComplete) return;
     if (currentWord.length > 0) {
       setCurrentWord((prev) => prev.slice(0, -1));
+      setWordRowsState((wordRowsState) => {
+        const copyForUpdate = [...wordRowsState];
+        copyForUpdate[rowCount].wordState[currentWord.length - 1].state =
+          'empty';
+        return copyForUpdate;
+      });
     }
   };
 
