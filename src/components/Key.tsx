@@ -47,7 +47,7 @@ const Key = ({
         }
       }}
     >
-      {letter}
+      {letter.toUpperCase()}
     </Button>
   );
 };

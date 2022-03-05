@@ -119,7 +119,7 @@ const Wordle = () => {
     if (!wordList.includes(currentWord)) {
       handleJiggle().then(() => {
         toast({
-          description: `"${currentWord}" is not in the list.`,
+          description: `"${currentWord.toUpperCase()}" is not in the list.`,
           status: 'error',
           duration: 3000,
           isClosable: true,

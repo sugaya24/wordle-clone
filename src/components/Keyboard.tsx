@@ -60,7 +60,7 @@ const Keyboard = ({
           _active={{ bgColor: 'gray.600' }}
           onClick={() => checkCurrentWord()}
         >
-          Enter
+          ENTER
         </Button>
         {ROW3.split('').map((letter, i) => {
           return (

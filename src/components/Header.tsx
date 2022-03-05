@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Center } from '@chakra-ui/react';
+import { css } from '@emotion/react';
 
 const Header = () => {
   return (
@@ -9,7 +10,13 @@ const Header = () => {
       bgColor={'blackAlpha.900'}
       borderBottom={'1px #555 solid'}
     >
-      <Center fontSize={'3xl'} fontWeight={'bold'} color={'whiteAlpha.900'}>
+      <Center
+        h={'100%'}
+        fontSize={'3xl'}
+        fontWeight={'bold'}
+        color={'whiteAlpha.900'}
+        fontFamily={'Alfa Slab One'}
+      >
         Wordle Clone
       </Center>
     </Box>
