@@ -37,7 +37,6 @@ const Wordle = () => {
   const [wordRowsState, setWordRowsState] =
     useState<TWordRowsState>(initialWordRowsState);
   const [currentWord, setCurrentWord] = useState<string>('');
-  const [letterCount, setLetterCount] = useState<number>(0);
   const [rowCount, setRowCount] = useState<number>(0);
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const [isWon, setIsWon] = useState<boolean>(false);
@@ -55,24 +54,8 @@ const Wordle = () => {
         checkCurrentWord();
       }
     },
-    [wordRowsState, letterCount, rowCount, isComplete]
+    [wordRowsState, rowCount, isComplete, currentWord]
   );
-
-  useEffect(() => {
-    let unmounted = false;
-    if (!unmounted) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-    setCurrentWord(
-      wordRowsState[rowCount].wordState
-        .map((wordState) => wordState.letter)
-        .join('')
-    );
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      unmounted = true;
-    };
-  }, [wordRowsState, handleKeyDown]);
 
   useEffect(() => {
     if (!isComplete) {
@@ -99,36 +82,20 @@ const Wordle = () => {
 
   const addLetter = (letter: string): void => {
     if (isComplete) return;
-    if (letterCount < 5) {
-      setWordRowsState((prev: TWordRowsState) => {
-        const copyForUpdate = [...prev];
-        copyForUpdate[rowCount].wordState[letterCount] = {
-          state: 'input',
-          letter,
-        };
-        return copyForUpdate;
-      });
-      setLetterCount((prev) => (prev < 5 ? prev + 1 : prev));
+    if (currentWord.length < 5) {
+      setCurrentWord(currentWord + letter);
     }
   };
 
   const deleteLetter = (): void => {
     if (isComplete) return;
-    if (letterCount > 0) {
-      setWordRowsState((prev: TWordRowsState) => {
-        const copyForUpdate = [...prev];
-        copyForUpdate[rowCount].wordState[letterCount - 1] = {
-          state: 'empty',
-          letter: '',
-        };
-        return copyForUpdate;
-      });
-      setLetterCount((prev) => prev - 1);
+    if (currentWord.length > 0) {
+      setCurrentWord((prev) => prev.slice(0, -1));
     }
   };
 
   const checkCurrentWord = (): void => {
-    if (letterCount !== 5) return;
+    if (currentWord.length !== 5) return;
     const promiseList: Promise<void>[] = [];
     for (let i = 0; i < 5; i++) {
       const promise: Promise<void> = new Promise((resolve) => {
@@ -136,19 +103,28 @@ const Wordle = () => {
           if (currentWord[i] === ANSWER[i]) {
             setWordRowsState((prev: TWordRowsState) => {
               const copyForUpdate = [...prev];
-              copyForUpdate[rowCount].wordState[i].state = 'correct';
+              copyForUpdate[rowCount].wordState[i] = {
+                state: 'correct',
+                letter: currentWord[i],
+              };
               return copyForUpdate;
             });
           } else if (ANSWER.includes(currentWord[i])) {
             setWordRowsState((prev: TWordRowsState) => {
               const copyForUpdate = [...prev];
-              copyForUpdate[rowCount].wordState[i].state = 'present';
+              copyForUpdate[rowCount].wordState[i] = {
+                state: 'present',
+                letter: currentWord[i],
+              };
               return copyForUpdate;
             });
           } else {
             setWordRowsState((prev: TWordRowsState) => {
               const copyForUpdate = [...prev];
-              copyForUpdate[rowCount].wordState[i].state = 'absent';
+              copyForUpdate[rowCount].wordState[i] = {
+                state: 'absent',
+                letter: currentWord[i],
+              };
               return copyForUpdate;
             });
           }
@@ -157,39 +133,67 @@ const Wordle = () => {
       });
       promiseList.push(promise);
     }
-    Promise.all(promiseList).then(() => {
-      wordRowsState[rowCount].wordState.map((wordState) => {
-        const { state, letter } = wordState;
-        setCharStatus((prev) => {
-          const copyForUpdate = new Map(prev);
-          if (state === 'correct') {
-            copyForUpdate.set(letter, 'correct');
-          }
-          if (state === 'present' && copyForUpdate.get(letter) !== 'correct') {
-            copyForUpdate.set(letter, 'present');
-          }
-          if (
-            state === 'absent' &&
-            copyForUpdate.get(letter) !== 'correct' &&
-            copyForUpdate.get(letter) !== 'present'
-          ) {
-            copyForUpdate.set(letter, 'absent');
-          }
-          return copyForUpdate;
+    Promise.all(promiseList)
+      .then(() => {
+        wordRowsState[rowCount].wordState.map((wordState) => {
+          const { state, letter } = wordState;
+          setCharStatus((prev: Map<string, CharStatus>) => {
+            const copyForUpdate = new Map(prev);
+            if (state === 'correct') {
+              copyForUpdate.set(letter, 'correct');
+            }
+            if (
+              state === 'present' &&
+              copyForUpdate.get(letter) !== 'correct'
+            ) {
+              copyForUpdate.set(letter, 'present');
+            }
+            if (
+              state === 'absent' &&
+              copyForUpdate.get(letter) !== 'correct' &&
+              copyForUpdate.get(letter) !== 'present'
+            ) {
+              copyForUpdate.set(letter, 'absent');
+            }
+            return copyForUpdate;
+          });
         });
+        if (currentWord === ANSWER) {
+          setWordRowsState((prev: TWordRowsState) => {
+            const copyForUpdate = [...prev];
+            copyForUpdate[rowCount].state = 'correct';
+            return copyForUpdate;
+          });
+          setIsWon(true);
+          setIsComplete(true);
+        } else {
+          setWordRowsState((prev: TWordRowsState) => {
+            const copyForUpdate = [...prev];
+            copyForUpdate[rowCount].state = 'wrong';
+            return copyForUpdate;
+          });
+        }
+      })
+      .then(() => {
+        if (rowCount < 5) {
+          setCurrentWord('');
+          setRowCount((prev) => prev + 1);
+        } else {
+          setIsComplete(true);
+        }
       });
-      if (currentWord === ANSWER) {
-        setIsWon(true);
-        setIsComplete(true);
-      }
-      setLetterCount(0);
-      if (rowCount < 5) {
-        setRowCount((prev) => prev + 1);
-      } else {
-        setIsComplete(true);
-      }
-    });
   };
+
+  useEffect(() => {
+    let unmounted = false;
+    if (!unmounted) {
+      document.addEventListener('keyup', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('keyup', handleKeyDown);
+      unmounted = true;
+    };
+  }, [wordRowsState, handleKeyDown, addLetter, deleteLetter, checkCurrentWord]);
 
   return (
     <Box
@@ -201,7 +205,15 @@ const Wordle = () => {
     >
       <Box pb={'8'}>
         {wordRowsState.map((row, i) => {
-          return <Row key={i} row={row} i={i} />;
+          return (
+            <Row
+              key={i}
+              row={row}
+              i={i}
+              currentWord={currentWord}
+              rowCount={rowCount}
+            />
+          );
         })}
       </Box>
       <Center>

@@ -11,13 +11,14 @@ import {
 type Props = {
   i: number;
   j: number;
+  letter: string;
   state: {
     state: 'correct' | 'empty' | 'absent' | 'present' | 'input';
     letter: string;
   };
 };
 
-const Cell = ({ i, j, state }: Props) => {
+const Cell = ({ i, j, state, letter }: Props) => {
   return (
     <Center
       border={'2px'}
@@ -39,7 +40,7 @@ const Cell = ({ i, j, state }: Props) => {
       ]}
       data-testid={`letter-${i}-${j}`}
     >
-      {state.letter.toUpperCase()}
+      {letter.toUpperCase()}
     </Center>
   );
 };
