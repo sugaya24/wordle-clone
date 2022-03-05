@@ -46,55 +46,22 @@ const Wordle = () => {
     useState<Map<string, CharStatus>>(initialCharStatus);
   const [jiggle, setJiggle] = useState<string>('');
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Backspace') {
-        deleteLetter();
-      } else if (CHARS_LOWER.indexOf(e.key) >= 0) {
-        addLetter(e.key);
-      } else if (e.key === 'Enter') {
-        checkCurrentWord();
+  const addLetter = useCallback(
+    (letter: string): void => {
+      if (isComplete) return;
+      if (currentWord.length < 5) {
+        setCurrentWord(currentWord + letter);
+        setWordRowsState((wordRowsState) => {
+          const copyForUpdate = [...wordRowsState];
+          copyForUpdate[rowCount].wordState[currentWord.length].state = 'input';
+          return copyForUpdate;
+        });
       }
     },
-    [wordRowsState, rowCount, isComplete, currentWord]
+    [currentWord, isComplete, rowCount]
   );
 
-  useEffect(() => {
-    if (!isComplete) {
-      return;
-    }
-    if (isWon) {
-      toast({
-        title: 'Congratulations!',
-        description: `You've completed the wordle!`,
-        status: 'success',
-        duration: 9000,
-        isClosable: true,
-      });
-    } else {
-      toast({
-        title: 'Oops!',
-        description: `The answer was "${ANSWER}".`,
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      });
-    }
-  }, [isComplete]);
-
-  const addLetter = (letter: string): void => {
-    if (isComplete) return;
-    if (currentWord.length < 5) {
-      setCurrentWord(currentWord + letter);
-      setWordRowsState((wordRowsState) => {
-        const copyForUpdate = [...wordRowsState];
-        copyForUpdate[rowCount].wordState[currentWord.length].state = 'input';
-        return copyForUpdate;
-      });
-    }
-  };
-
-  const deleteLetter = (): void => {
+  const deleteLetter = useCallback((): void => {
     if (isComplete) return;
     if (currentWord.length > 0) {
       setCurrentWord((prev) => prev.slice(0, -1));
@@ -105,7 +72,7 @@ const Wordle = () => {
         return copyForUpdate;
       });
     }
-  };
+  }, [currentWord, isComplete, rowCount]);
 
   const handleJiggle = (): Promise<void> => {
     return new Promise((resolve) => {
@@ -114,7 +81,7 @@ const Wordle = () => {
     });
   };
 
-  const checkCurrentWord = (): void => {
+  const checkCurrentWord = useCallback((): void => {
     if (currentWord.length !== 5) return;
     if (!wordList.includes(currentWord)) {
       handleJiggle().then(() => {
@@ -192,6 +159,7 @@ const Wordle = () => {
             }
             return copyForUpdate;
           });
+          return wordState;
         });
         if (currentWord === ANSWER) {
           setWordRowsState((prev: TWordRowsState) => {
@@ -217,7 +185,43 @@ const Wordle = () => {
           setIsComplete(true);
         }
       });
-  };
+  }, [currentWord, rowCount, toast, wordRowsState]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Backspace') {
+        deleteLetter();
+      } else if (CHARS_LOWER.indexOf(e.key) >= 0) {
+        addLetter(e.key);
+      } else if (e.key === 'Enter') {
+        checkCurrentWord();
+      }
+    },
+    [addLetter, deleteLetter, checkCurrentWord]
+  );
+
+  useEffect(() => {
+    if (!isComplete) {
+      return;
+    }
+    if (isWon) {
+      toast({
+        title: 'Congratulations!',
+        description: `You've completed the wordle!`,
+        status: 'success',
+        duration: 9000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Oops!',
+        description: `The answer was "${ANSWER}".`,
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  }, [isComplete, isWon, toast]);
 
   useEffect(() => {
     let unmounted = false;

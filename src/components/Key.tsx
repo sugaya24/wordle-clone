@@ -27,7 +27,7 @@ const Key = ({
     } else {
       setBgColor('gray.600');
     }
-  }, [charStatus]);
+  }, [charStatus, letter]);
 
   return (
     <Button
